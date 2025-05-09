@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Smart Slurry Control Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --primary-dark: #2563eb;
+      --secondary: #ffeb3b;
+      --danger: #ef4444;
+      --success: #10b981;
+      --dark: #1f2937;
+      --light: #f9fafb;
+      --gray: #6b7280;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #1e3a8a 0%, #0c4a6e 100%);
+      background-attachment: fixed;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      color: var(--light);
+      line-height: 1.6;
+    }
+
+    /* Header Styles */
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 0.75rem 1rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 1rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      text-decoration: none;
+    }
+
+    .logo img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+
+    .logo h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--dark);
+      margin: 0;
+    }
+    
+    .logo .tagline {
+      font-size: 0.875rem;
+      color: var(--gray);
+      font-weight: 400;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6rem 1rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Dashboard Card */
+    .dashboard-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 1rem;
+      padding: 2rem;
+      width: 100%;
+      max-width: 800px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      margin-bottom: 2rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .dashboard-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Status Display */
+    .status-header {
+      margin-bottom: 1.5rem;
+    }
+    
+    .status-header h2 {
+      font-size: 2rem;
+      color: var(--secondary);
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    
+    .status-header p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1rem;
+    }
+
+    /* Line Status Indicator */
+    .line-status {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 1.5rem 0;
+    }
+    
+    .status-indicator {
+      font-size: 2.5rem;
+      font-weight: bold;
+      padding: 1.5rem 3rem;
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid var(--primary);
+      margin-bottom: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .status-indicator::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--primary);
+      opacity: 0.1;
+      z-index: -1;
+    }
+    
+    .status-indicator.active {
+      color: var(--primary);
+      border-color: var(--primary);
+      animation: pulse 2s infinite;
+    }
+    
+    .status-indicator.error {
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+    
+    .status-indicator.error::before {
+      background: var(--danger);
+    }
+    
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+    
+    /* Status Details */
+    .status-details {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      margin-top: 1rem;
+    }
+    
+    .detail-item {
+      text-align: center;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 0.5rem;
+      flex: 1;
+      margin: 0 0.5rem;
+      transition: all 0.3s ease;
+    }
+    
+    .detail-item:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-3px);
+    }
+    
+    .detail-item i {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--secondary);
+    }
+    
+    .detail-item h3 {
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+      color: white;
+    }
+    
+    .detail-item p {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    /* Line Visualization */
+    .line-visualization {
+      margin-top: 2rem;
+      width: 100%;
+    }
+    
+    .lines-container {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+    
+    .line {
+      width: 22%;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .line::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--gray);
+      transition: all 0.3s ease;
+    }
+    
+    .line.active::after {
+      background: var(--primary);
+      height: 6px;
+    }
+    
+    .line i {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      color: var(--gray);
+    }
+    
+    .line.active i {
+      color: var(--primary);
+    }
+    
+    .line h3 {
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .line p {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: auto;
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .status-details {
+        flex-direction: column;
+      }
+      
+      .detail-item {
+        margin: 0.5rem 0;
+      }
+      
+      .lines-container {
+        flex-wrap: wrap;
+      }
+      
+      .line {
+        width: 48%;
+        margin-bottom: 1rem;
+      }
+      
+      .status-indicator {
+        font-size: 2rem;
+        padding: 1rem 2rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .logo h1 {
+        font-size: 1.25rem;
+      }
+      
+      .status-header h2 {
+        font-size: 1.5rem;
+      }
+      
+      .line {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header Section -->
+  <header class="header">
+    <div class="header-content">
+      <a href="#" class="logo">
+        <img src="logo.png" alt="Smart Slurry Control Logo" />
+        <div>
+          <h1>Smart Slurry Control</h1>
+          <span class="tagline">Real-time Monitoring System</span>
+        </div>
+      </a>
+      <div class="header-actions">
+        <span id="currentTime" class="time-display"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="dashboard-card">
+      <div class="status-header">
+        <h2><i class="fas fa-tachometer-alt"></i> System Status Dashboard</h2>
+        <p>Real-time monitoring of active slurry lines</p>
+      </div>
+      
+      <div class="line-status">
+        <div id="lineStatus" class="status-indicator">
+          <i class="fas fa-sync fa-spin"></i> Connecting...
+        </div>
+        
+        <div class="status-details">
+          <div class="detail-item">
+            <i class="fas fa-clock"></i>
+            <h3>Last Update</h3>
+            <p id="lastUpdate">--:--:--</p>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-network-wired"></i>
+            <h3>Connection</h3>
+            <p id="connectionStatus">Establishing...</p>
+          </div>
+          <div class="detail-item">
+            <i class="fas fa-server"></i>
+            <h3>System Health</h3>
+            <p id="systemHealth">Checking...</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="line-visualization">
+        <h3><i class="fas fa-project-diagram"></i> Line Status Visualization</h3>
+        <div class="lines-container">
+          <div id="line1" class="line">
+            <i class="fas fa-pipe"></i>
+            <h3>Line 1</h3>
+            <p>Inactive</p>
+          </div>
+          <div id="line2" class="line">
+            <i class="fas fa-pipe"></i>
+            <h3>Line 2</h3>
+            <p>Inactive</p>
+          </div>
+          <div id="line3" class="line">
+            <i class="fas fa-pipe"></i>
+            <h3>Line 3</h3>
+            <p>Inactive</p>
+          </div>
+          <div id="line4" class="line">
+            <i class="fas fa-pipe"></i>
+            <h3>Line 4</h3>
+            <p>Inactive</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>© 2023 Smart Slurry Control System | Version 1.2.0</p>
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2WR8AtghPB3TEeQu8qH0zW1UQvo_MyLE",
+      authDomain: "iot-project-31020.firebaseapp.com",
+      databaseURL: "https://iot-project-31020-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "iot-project-31020",
+      storageBucket: "iot-project-31020.appspot.com",
+      messagingSenderId: "820112850048",
+      appId: "1:820112850048:web:0590eb600d38d2774d7a65",
+      measurementId: "G-RV0HG73VRP"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // DOM Elements
+    const lineStatusEl = document.getElementById("lineStatus");
+    const lastUpdateEl = document.getElementById("lastUpdate");
+    const connectionStatusEl = document.getElementById("connectionStatus");
+    const systemHealthEl = document.getElementById("systemHealth");
+    const currentTimeEl = document.getElementById("currentTime");
+    const lineElements = {
+      1: document.getElementById("line1"),
+      2: document.getElementById("line2"),
+      3: document.getElementById("line3"),
+      4: document.getElementById("line4")
+    };
+
+    // Update current time
+    function updateTime() {
+      const now = new Date();
+      currentTimeEl.textContent = now.toLocaleTimeString();
+    }
+    
+    setInterval(updateTime, 1000);
+    updateTime();
+
+    // Fetch data from the 'currentLine' path in Firebase
+    const currentLineRef = ref(db, "currentLine");
+
+    // Listening for changes in 'currentLine'
+    onValue(currentLineRef, (snapshot) => {
+      const currentLine = snapshot.val();
+      const updateTime = new Date().toLocaleTimeString();
+      
+      lastUpdateEl.textContent = updateTime;
+      connectionStatusEl.innerHTML = `<span style="color: var(--success)">Connected</span>`;
+      systemHealthEl.innerHTML = `<span style="color: var(--success)">Operational</span>`;
+      
+      // Reset all lines
+      Object.values(lineElements).forEach(line => {
+        line.classList.remove("active");
+        line.querySelector("p").textContent = "Inactive";
+        line.querySelector("i").className = "fas fa-pipe";
+      });
+
+      if (currentLine >= 1 && currentLine <= 4) {
+        // Update status indicator
+        lineStatusEl.innerHTML = `<i class="fas fa-check-circle"></i> Line ${currentLine} is Active`;
+        lineStatusEl.className = "status-indicator active";
+        
+        // Update the active line visualization
+        const activeLine = lineElements[currentLine];
+        activeLine.classList.add("active");
+        activeLine.querySelector("p").textContent = "Active";
+        activeLine.querySelector("i").className = "fas fa-pipe fa-bounce";
+      } else {
+        lineStatusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> No active line`;
+        lineStatusEl.className = "status-indicator error";
+      }
+    }, (error) => {
+      lineStatusEl.innerHTML = `<i class="fas fa-times-circle"></i> Connection Error`;
+      lineStatusEl.className = "status-indicator error";
+      connectionStatusEl.innerHTML = `<span style="color: var(--danger)">Disconnected</span>`;
+      systemHealthEl.innerHTML = `<span style="color: var(--danger)">Offline</span>`;
+      console.error("Firebase error:", error);
+    });
+  </script>
+</body>
+</html>
